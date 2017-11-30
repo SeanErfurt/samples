@@ -12,3 +12,6 @@ assignments, while the ones in the python sub-folder are for personal edificatio
 Bedtime contains 2 scripts I wrote one day to automate a part of my bedtime routine: put the computer on a countdown to sleepmode, open a
 chrome window to play some relaxing sounds, and dim the brightness. In the process of writing these two scripts, I learned new things
 about chrome, elevating to admin in Windows, and display controls.
+
+Python contains miscellaneous python scripts I've written over the years to save time on math homework, let the RNG decide things for me,
+or entertain myself.
