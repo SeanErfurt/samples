@@ -103,6 +103,15 @@ Using the bash script:
             You can specify the host computer with '-l hostname=[ID]'
                 to speed up I/O, but if the computer is busy, overall
                 speed may be slower.
+                
+Scoring:
+    The final reranked file output can be scored according to gold standard
+    data generated from the wiktionary data. However, this file does not have
+    a command-line interface at the time of this writing. The python function
+    is supplied in scoreResults.py; simply provide it the directory generated
+    containing the goldfiles (denoted with the suffix "_gold.txt") as inDir,
+    the directory containing the final reranked files (denoted with the suffix
+    "_reranked.txt") as outDir, and optional precision as dec (default 2 == .01).
 
 Manual Data pipeline (in case bash script needs debugging):
 
