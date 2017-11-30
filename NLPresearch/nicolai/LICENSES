@@ -1,0 +1,72 @@
+m2m-aligner credit:
+@InProceedings{jiampojamarn2007:,
+  author    = {Jiampojamarn, Sittichai  and  Kondrak, Grzegorz  and  Sherif, Tarek},
+  title     = {Applying Many-to-Many Alignments and Hidden Markov Models to Letter-to-Phoneme Conversion},
+  booktitle = {Human Language Technologies 2007: The Conference of the North American Chapter of the Association for Computational Linguistics;
+Proceedings of the Main Conference},
+  month     = {April},
+  year      = {2007},
+  address   = {Rochester, New York},
+  publisher = {Association for Computational Linguistics},
+  pages     = {372--379},
+  url       = {http://www.aclweb.org/anthology/N/N07/N07-1047}
+}
+---------------------------------------------------------------------------------------------------------------------------------------
+DirecTL+ credit:
+@InProceedings{jiampojamarn2008,
+  author    = {Jiampojamarn, Sittichai  and  Cherry, Colin  and  Kondrak, Grzegorz},
+  title     = {Joint Processing and Discriminative Training for Letter-to-Phoneme Conversion},
+  booktitle = {Proceedings of ACL-08: HLT},
+  month     = {June},
+  year      = {2008},
+  address   = {Columbus, Ohio},
+  publisher = {Association for Computational Linguistics},
+  pages     = {905--913},
+  url       = {http://www.aclweb.org/anthology/P/P08/P08-1103}
+}
+---------------------------------------------------------------------------------------------------------------------------------------
+SVMLight:
+Author: Thorsten Joachims
+Get SVMlight source at http://download.joachims.org/svm_light/current/svm_light.tar.gz
+---------------------------------------------------------------------------------------------------------------------------------------
+STLPort:
+view full license at: http://www.stlport.org/doc/license.html
+
+Copyright 1999,2000 Boris Fomitchev
+
+This material is provided "as is", with absolutely no warranty expressed or implied. Any use is at your own risk.
+Permission to use or copy this software for any purpose is hereby granted without fee, provided the above notices are retained on all
+copies. Permission to modify the code and to distribute modified code is granted, provided the above notices are retained, and a notice
+that the code was modified is included with the above copyright notice.
+---------------------------------------------------------------------------------------------------------------------------------------
+Liblinear license:
+Copyright (c) 2007-2017 The LIBLINEAR Project.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+
+1. Redistributions of source code must retain the above copyright
+notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+documentation and/or other materials provided with the distribution.
+
+3. Neither name of copyright holders nor the names of its contributors
+may be used to endorse or promote products derived from this software
+without specific prior written permission.
+
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
