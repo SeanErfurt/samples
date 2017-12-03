@@ -1,11 +1,10 @@
 import string
-from collections import Counter, OrderedDict
+from collections import Counter, OrderedDict, defaultdict
 from pprint import pprint
 from itertools import permutations
 import random
 
-input_text = "zqw popy rcd njb hd hq lj lnpc dpv dttlf c uujskv bjuj jfusgf foe nkjt mmu rzhr rj roc uczsq jpqjglb " \
-             "adfgic"
+
 # set of possible keys (assumption)
 alphabet = string.ascii_lowercase
 # order of most frequent english characters
@@ -32,11 +31,13 @@ words = ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', '
 #    TA_  TEA
 ##############################################################3
 
-def cracksub(ciphertext, mode=0, num_trials=1000000, mapping={}):
+def cracksub(ciphertext, mode=0, num_trials=1000000, mapping={}, ignore_ws=False):
     relFreq = {}
     # remove whitespace for calculating relative frequencies
-    no_ws_text = ''.join(input_text.split())
-    print(no_ws_text)
+    no_ws_text = ''.join(ciphertext.split())
+    if ignore_ws:
+        ciphertext = no_ws_text
+    #TODO extract method getMFCs
     chars = len(no_ws_text)
     cnt = Counter(no_ws_text)
     for i in alphabet:
@@ -44,7 +45,7 @@ def cracksub(ciphertext, mode=0, num_trials=1000000, mapping={}):
     # order by frequency descending
     mfcs = OrderedDict(sorted(relFreq.items(),key=lambda t: t[1], reverse=True))
     print("Most Frequent cipher characters:")
-    pprint(list(mfcs.keys()))
+    pprint(list(mfcs.keys()), compact=True)
     # Find un-mapped letters
     unused_in = [x for x in mfcs.keys() if x not in mapping.keys()]
     unused_out = [x for x in standard_mfcs if x not in mapping.values()]
@@ -53,48 +54,35 @@ def cracksub(ciphertext, mode=0, num_trials=1000000, mapping={}):
         # assign un-mapped letters in order
         for i, c in enumerate(unused_in):
             mapping[c] = unused_out[i]
-        decrypted = input_text.translate(str.maketrans(mapping))
-        print("Cipher Text: " + input_text)
+        decrypted = ciphertext.translate(str.maketrans(mapping))
+        print("Cipher Text: " + ciphertext)
         print("Output Text: " + decrypted)
         return decrypted
     else:
         # Brute force solution with random mappings and filtering for common short words in output
-        found = []
-        print("Cipher Text: " + input_text)
+        found = defaultdict(list)
+        print("Cipher Text: " + ciphertext)
         for i in range(0, num_trials):
             random_out = random.sample(list(unused_out), k=len(unused_out))
             # assign un-mapped letters using random permutation of unassigned output letters
             for i, c in enumerate(unused_in):
                 mapping[c] = random_out[i]
-            decrypted = input_text.translate(str.maketrans(mapping))
-            # TODO: Add flag for ignoring given word boundaries (could be misleading)
-            #decrypted = no_ws_text.translate(str.maketrans(mapping))
+            decrypted = ciphertext.translate(str.maketrans(mapping))
+            # TODO: Extract Method findWords
             for w in words:
-                if w in decrypted.split():  # split() can only be used if cipher contains spaces
+                index = decrypted.find(w)
+                if index != -1:
                     print("Output Text: " + decrypted)
-                    # TODO: collect mapping that produces the found word
-                    #for char in w:
-                    #    pass
-                    found.append(w)
-                    words.remove(w) # avoid getting lots of junk permutations on one "hit"
+                    cipher = ciphertext[index:index + len(w)]
+                    found[cipher].append(w)
+                    words.remove(w)  # avoid getting lots of junk permutations on one "hit"
                     break
         return found
-    # Hybrid guessing and randomized ######################################
-    # Input educated guess for some letters, fill other slots at random
-    # mapping = {'r':'l', 'c':'e', 'd':'t', 'o':'i', 'f':'h', 'e':'s'}
-    # unused_in = set(alphabet) - set(mapping.keys())
-    # unused_out = set(alphabet) - set(mapping.values())
-    # unused_out = random.sample(list(unused_out), k=len(unused_out))
-    # c = 0
-    # for i in unused_in:
-    #     mapping[i] = unused_out[c]
-    #     c += 1
-    # decrypted = input_text.translate(str.maketrans(mapping))
-    # print(input_text)
-    # return decrypted
 
 
 if __name__ == "__main__":
+    input_text = "zqw popy rcd njb hd hq lj lnpc dpv dttlf c uujskv bjuj jfusgf foe nkjt mmu rzhr rj roc uczsq " \
+                 "jpqjglb adfgic "
     m= {'r': 's',
         'c': 'a',
         'd': 'd',
@@ -110,4 +98,4 @@ if __name__ == "__main__":
         'v': 'y',
         'p': 'a'
         }
-    print(cracksub(input_text, mapping=m, mode=1))
+    print(cracksub(input_text, mapping=m, mode=1, ignore_ws=False))
