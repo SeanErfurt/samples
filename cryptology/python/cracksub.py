@@ -1,9 +1,9 @@
-import json
 import string
 from collections import Counter, defaultdict, OrderedDict
 from pprint import pprint
 import random
-import requests
+import json
+from nltk.corpus import stopwords, words
 
 # set of possible keys (assumption)
 alphabet = string.ascii_lowercase
@@ -14,37 +14,39 @@ standard_mfcs = "etaoinshrdlucmfwypvbgkjqxz"
 def loadWords(word_list):
     '''
     Load in the selected word list for searching in plaintext.
-    :param word_list: string matching one of: { (s)hort | (m)edium | (l)ong }
+    :param word_list: int representing relatively-sized lists (1 == stop-words)
     :return: list of strings
     '''
-    if word_list.lower().startswith("s"):
+    if word_list == 0:
         # short list: most common 3-letter words
-        words = ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', 'had', 'her',
+        # @see: http://practicalcryptography.com/ciphers/simple-substitution-cipher/
+        wordList = ['the', 'and', 'for', 'are', 'but', 'not', 'you', 'all', 'any', 'can', 'had', 'her',
                  'was', 'one', 'our', 'out', 'day', 'get', 'has', 'him', 'his', 'how', 'man', 'new',
                  'now', 'old', 'see', 'two', 'way', 'who', 'boy', 'did', 'its', 'let', 'put', 'say',
                  'she', 'too', 'use']
-    elif word_list.lower().startswith("m"):
+    elif word_list == 1:
+        # stop-word list: from NLTK
+        # @see http://www.nltk.org/book/ch02.html#code-unusual
+        endings = set(['s', 't', 'd', 'm', 'o', 'y']) # exclude, count as stop-words but aren't words
+        wordList = [w for w in stopwords.words('english') if w not in endings]
+    elif word_list == 2:
         # medium-size list: 1949 most common words
         # @see http://preshing.com/20110811/xkcd-password-generator/
-        with open("words.txt", mode="r") as w:
-            words = list(json.load(w))
+        with open("xkcdWords.txt", mode="r") as w:
+            wordList = list(json.load(w))
+    elif word_list == 3:
+        # large list: 3000 most common words
+        # @see https://www.ef.edu/english-resources/english-vocabulary/top-3000-words/
+        with open("3kWords.txt", mode="r") as w:
+            wordList = list(w)
     else:
-        # large list: 466,000 English words
-        # TODO this list contains single letters that arent words, leads to lots of false positives
-        # Use NLTK Wordlist Corpora
-        # @see http://www.nltk.org/book/ch02.html
-        try:
-            with open("wordList.txt", mode="r") as w:
-                words = list(json.load(w))
-        except IOError:
-            with open("wordList.txt", mode="w") as w:
-                r = requests.get('http://raw.githubusercontent.com/dwyl/english-words/master/words_dictionary.json')
-                words = list(dict(r.json()).keys())
-                w.write(json.dumps(words))
-    return words
+        # largest list: NLTK Wordlist Corpora
+        # @see http://www.nltk.org/book/ch02.html#code-unusual
+        wordList = words.words()
+    return wordList
 
 
-def crackSub(ciphertext, mode="frequency", num_trials=100000, mapping=None, ignore_ws=False, word_list="short", silent=True):
+def crackSub(ciphertext, mode="frequency", num_trials=100000, mapping=None, ignore_ws=False, word_list=0, silent=True):
     """
     Attempt to crack a substitution cipher.
     :param ciphertext: the encoded message as a string
@@ -87,7 +89,7 @@ def crackSub(ciphertext, mode="frequency", num_trials=100000, mapping=None, igno
     # Brute force solution with random mappings and filtering for common english words in output
     else:
         # Load words to search for
-        words = loadWords(word_list)
+        wordList = loadWords(word_list)
         # accumulate words found, keyed by start index
         foundWords = defaultdict(list)
         for n in range(0, num_trials):
@@ -97,14 +99,14 @@ def crackSub(ciphertext, mode="frequency", num_trials=100000, mapping=None, igno
                 mapping[c] = random_out[i]
             plaintext = ciphertext.translate(str.maketrans(mapping))
             # search plaintext for valid words
-            for i, w in enumerate(words):
+            for i, w in enumerate(wordList):
                 start = plaintext.find(w)
                 if start != -1:
                     end = start + len(w)
                     if not silent:
                         print("Cipher Text:", ciphertext[0:start], ciphertext[start:end], ciphertext[end:])
                         print("Output Text:", plaintext[0:start], plaintext[start:end], plaintext[end:], "\n")
-                    words.remove(w)  # avoid getting lots of repeated hits
+                    wordList.remove(w)  # avoid getting lots of repeated hits
                     foundWords[start].append(w)
         # sort by index ascending
         foundWords = OrderedDict(sorted(foundWords.items(), key=lambda t: t[0]))
@@ -153,7 +155,7 @@ if __name__ == "__main__":
             answers.write(json.dumps(mapping_answer))
 
     plain, m = crackSub(cipher, mode="f") # get frequency mapping
-    found = crackSub(cipher, mapping=m, mode="random", num_trials=1, word_list="m") # find words using freq map
+    found = crackSub(cipher, mapping=m, mode="random", num_trials=1, word_list=0) # find words using freq map
     if found:
         print("Found Words:")
         printFW(found)
@@ -161,10 +163,10 @@ if __name__ == "__main__":
     # choose a subset of found words that do not conflict when assigning a map
     # plain_char => message_index
     chosen_map = {}
-    for start, words in found.items(): # one forward pass through message only
+    for start, options in found.items(): # one forward pass through message only
         # check that this index isn't already assigned (word overlap)
         if start not in chosen_map.values():
-            for word in words:
+            for word in options:
                 for i, char in enumerate(word):
                     if char not in chosen_map:
                         # assign new plain_char to this index
@@ -188,8 +190,8 @@ if __name__ == "__main__":
     plain, m = crackSub(cipher, mapping=m, mode="f")
     print("Cipher Text: " + cipher)
     print("Output Text: " + plain)
-    # find more words using freq map
-    found = crackSub(cipher, mapping=m, mode="random", num_trials=1, word_list="l", silent=False)
+    # find more words using freq map, by incrementing word_list
+    found = crackSub(cipher, mapping=m, mode="random", num_trials=1, word_list=1, silent=False)
     ### NOTES ############################################################
     # TODO Automate the word-finding/map-building to decode an arbitrary ciphertext
     # Top-level iter: found = crackSub(cipher, mapping=m, mode="random", num_trials=50, wordList="m")
