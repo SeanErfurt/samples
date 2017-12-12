@@ -15,3 +15,7 @@ about chrome, elevating to admin in Windows, and display controls.
 
 Python contains miscellaneous python scripts I've written over the years to save time on math homework, let the RNG decide things for me,
 or entertain myself.
+
+Java contains some Java files I wrote for my Data Structures class.
+
+Perl contains some of the Perl scripts I wrote for my Information Retrieval & Web Agents class, including a web crawler.
