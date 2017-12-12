@@ -1,4 +1,4 @@
-A simple pair of scripts for use before bed-time.
+Under Windows there is a simple pair of scripts for use before bed-time.
 
 Sleep_in_ten.bat opens a Chrome window with a hard-coded Youtube stream
 url that plays relaxing sounds 24/7. It calls brightness_control.ps1
@@ -19,3 +19,8 @@ The nested powershell sessions are necessary because the Task Scheduler
 can’t call the PowerShell script as admin from the command prompt, but we
 can from PowerShell."
 (Source: http://blog.danskingdom.com/tag/run-as-admin/)
+
+Under Linux you will find the equivalent bash script. Should work on most
+Ubuntu-like systems, definitely works on Linux Mint (14.04.1-Ubuntu),
+with VGA compatible controller: Intel Corporation Haswell-ULT Integrated 
+Graphics Controller (rev 0b)
