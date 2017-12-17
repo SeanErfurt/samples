@@ -16,28 +16,32 @@ CRONCMD="@reboot echo $BRIGHTVAL | sudo tee $BRIGHTFILE"
 
 # Get chromium PIDs
 declare -a OLDPIDS=(`pgrep chromium`)
+echo "${OLDPIDS[*]}"
 # open youtube music url
-sudo chromium-browser --no-sandbox "https://www.youtube.com/watch?v=-zJfwr-SZgY"
+( chromium-browser --no-sandbox "https://www.youtube.com/watch?v=-zJfwr-SZgY" ) &
 # Get chromium PIDs after new window/tab opens
+sleep 1
 declare -a NEWPIDS=(`pgrep chromium`)
+echo "${NEWPIDS[*]}"
 
 # Find new process id, if any
-let NEWPID=-1
-for i in "${NEWPIDS[@]}"; do
+declare -a COPYNEW=("${NEWPIDS[@]}")
+for ((i=0; i<${#NEWPIDS[@]}; i++)); do
 	for j in "${OLDPIDS[@]}"; do
-		if [[ $i == $j ]]; then
-			NEWPID=$j
+		if [[ ${NEWPIDS[$i]} == $j ]]; then
+			unset COPYNEW[$i]
 			break
 		fi
 	done
 done
 
 # Power off after ten minutes
-sudo shutdown -P 10
+sudo shutdown -P 10 &
 # Wait almost 10 minutes, then attempt to close new chromium window/tab
 sleep 595
 if [ -z "$OLDPIDS" ]; then
-	pkill chromium
-elif [[ $NEWPID -gt 0 ]]; then
-	kill $NEWPID
+	pkill --oldest chromium
+elif [[ ${#COPYNEW[@]} -gt 0 ]]; then
+	kill ${COPYNEW[*]}
 fi
+exit
