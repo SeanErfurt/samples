@@ -1,0 +1,4 @@
+Runs fine with Firefox 57.0.2 and wmctrl 1.07-7. Should also work with many older versions, but this is untested.
+The first time you run bedtime.sh, the Firefox profile manager will appear. Create a new profile called "system" 
+so that anything the script does, does not affect your main profile. 
+You may also have to set your default profile back to "default" the next time you start up Firefox normally.
