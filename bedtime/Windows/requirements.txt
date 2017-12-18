@@ -1,0 +1,3 @@
+Works with Chrome 63.0.3239.108, and likely works with many older versions as well.
+Requires PowerShell. You should also add PsShutdown.exe (part of PsTools) and 
+brightness_control.ps1 to your system PATH variable.
