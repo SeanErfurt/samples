@@ -4,12 +4,19 @@ from pprint import pprint
 import random
 import json
 from nltk.corpus import stopwords, words
+import phrasefinder  # @see https://github.com/mtrenkmann/phrasefinder-client-python
 
 # set of possible keys (assumption)
 alphabet = string.ascii_lowercase
 # order of most frequent english characters
 standard_mfcs = "etaoinshrdlucmfwypvbgkjqxz"
 
+params = phrasefinder.Options()
+params.corpus = phrasefinder.Corpus.AmericanEnglish  # default
+params.nmin = 1  # default
+params.nmax = 3  # default = 5
+params.topk = 100  # default
+ngram_totals = [4362290, 120559663, 418881178]
 
 def loadWords(word_list):
     '''
@@ -60,6 +67,33 @@ def loadWords(word_list):
 #             3-grams: 418,881,178
 #             4-grams: 584,347,976
 #             5-grams: 448,506,094
+def pf_query(query='I like ?'):
+    """Queries the PhraseFinder web service and returns the result."""
+    q = query
+    result = []
+    # Perform a request.
+    try:
+        response = phrasefinder.search(q, params)
+        if response.status != phrasefinder.Status.Ok:
+            print('Request was not successful: {}'.format(response.status))
+            return result
+        # Print phrases line by line.
+        # TODO light pre-processing (relFreq, organizing, etc)
+        for phrase in response.phrases:
+            phrase_relFreq = phrase.match_count / ngram_totals[len(phrase.tokens) - 1]
+            print("{0} {1:6f} {2:6f}".format(phrase.match_count, phrase.score, phrase_relFreq), end="")
+            for token in phrase.tokens:
+                print(' {}_{}'.format(token.text, token.tag), end="")
+            print()
+        # Example output:
+        #   1065105 0.268530 0.002543 I_0 like_0 to_1
+        #   484768 0.122218 0.001157 I_0 like_0 the_1
+        #   ...
+        # Token tag meaning:
+        # Given, Inserted, Alternative, Completed = range(4)
+    except Exception as error:
+        print('Some error occurred: {}'.format(error))
+    return result
 
 # TODO sample sufficient google ngram data to build an accurate n-gram Markov model
 
@@ -174,7 +208,46 @@ def printFW(found):
         print(None)
 
 
+def getMappingFromWords(foundWords, cipher):
+    """
+    Choose a subset of found words that do not conflict when assigned to a mapping
+    :param foundWords: OrderedDict keyed on message index. Values are a list of possible words starting at that index.
+    :param cipher: The original ciphertext, for checking conflicts and adding keys to output mapping
+    :return a valid dict mapping to pass to crackSub()
+    """
+    # plain_char => message_index
+    chosen_map = {}
+    for start, options in foundWords.items():  # one forward pass through message only (change?)
+        # check that this index isn't already assigned (word overlap)
+        if start not in chosen_map.values():
+            for word in options:
+                compat = []
+                for i, char in enumerate(word):
+                    if char not in chosen_map:
+                        # assign new plain_char to this index
+                        chosen_map[char] = start + i
+                    elif cipher[start + i] == cipher[chosen_map[char]]:
+                        # compatible duplicate assignment, allow and move on to next char
+                        compat.append(char)
+                        continue
+                    else:
+                        # Conflict - roll back any new char assignments from this word, then try next word in words
+                        for c in word:
+                            if c != char and c not in compat: # don't remove assignments that existed before this word
+                                chosen_map.pop(c, None)
+                        break
+    print(len(chosen_map), "characters assigned")
+    # convert chosen_map to {cipher => plain} char mapping
+    m = {}
+    for out_char, i in chosen_map.items():
+        in_char = cipher[i]  # get cipher character at chosen index
+        m[in_char] = out_char
+    return m
+
+
 if __name__ == "__main__":
+    print(pf_query())
+    quit()
     # message = 'The quick brown fox jumps over the lazy dog'
     message = '''A wonderful serenity has taken possession of my entire soul, like these sweet mornings of spring 
     which I enjoy with my whole heart. I am alone, and feel the charm of existence in this spot, which was created 
@@ -199,42 +272,21 @@ if __name__ == "__main__":
     plain, m = crackSub(cipher, mode="f") # get frequency mapping
     found = crackSub(cipher, mapping=m, mode="random", num_trials=1, word_list=0) # find words using freq map
     printFW(found)
-    # TODO extract getMappingFromWords method
-    # choose a subset of found words that do not conflict when assigned to a mapping
-    # plain_char => message_index
-    chosen_map = {}
-    for start, options in found.items(): # one forward pass through message only (change?)
-        # check that this index isn't already assigned (word overlap)
-        if start not in chosen_map.values():
-            for word in options:
-                for i, char in enumerate(word):
-                    if char not in chosen_map:
-                        # assign new plain_char to this index
-                        chosen_map[char] = start + i
-                    elif cipher[start + i] == cipher[chosen_map[char]]:
-                        # compatible duplicate assignment, allow and move on to next char
-                        continue
-                    else:
-                        # Conflict - roll back any assignments from this word, then try next word in words
-                        for c in word:
-                            chosen_map.pop(c,None)
-                        break
-    # TODO save max(len(chosen_map)) & chosen_map & print spaced output (mode=f)
-    print(len(chosen_map), "characters assigned")
-    # convert chosen_map to {cipher => plain} char mapping
-    m = {}
-    for out_char, i in chosen_map.items():
-        in_char = cipher[i]  # get cipher character at chosen index
-        m[in_char] = out_char
+    m = getMappingFromWords(found, cipher)
     pprint(m.items())
     plain, m = crackSub(cipher, mapping=m, mode="f")
     print("Cipher Text: " + cipher)
     print("Output Text: " + plain)
-    # find more words using freq map, by incrementing word_list (loop starts again here)
+    # TODO if there is more than one value for the first key in found, run getMapping again without the previous values
+    #       this will allow for multiple mappings in the event that multiple candidate messages are found within iters
+    # TODO save max(len(m)) & max_m of each loop once above todo is implemented (most complete message is preferred)
+    # find more words, using standard_mfcs to fill gaps in mapping, by incrementing word_list (loop starts again here)
+    # TODO possibly create mutations in mapping to avoid getting stuck on incorrect words
     found = crackSub(cipher, mapping=m, mode="random", num_trials=1, word_list=1, silent=False)
     printFW(found)
-    # TODO after word_list == 4 is used, fill in remaining spaces using n-gram phrase expansion
-    # if there are multiple possible messages, rank them using n-gram model probabilities, then output
+    # TODO after word_list == 4 is used, fill in remaining spaces in message using n-gram phrase expansion
+    #       can also possibly generate new candidate messages using random subset of found words and then expanding
+    # if there are multiple possible messages after looping, rank them using n-gram model probabilities, then output
 
     ### NOTES ############################################################
     # TODO Automate the word-finding/map-building to decode an arbitrary ciphertext
